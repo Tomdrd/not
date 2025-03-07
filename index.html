@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olá, Mundo!</title>
+</head>
+<body>
+    <h1>Olá, Mundo!</h1>
+    <button id="perm">Ativar Notificações</button>
+    <br><br>
+    <input type="number" id="hora" min="0" max="23" placeholder="Hora (0-23)">
+    <input type="number" id="minuto" min="0" max="59" placeholder="Minuto (0-59)">
+    <button id="agendar">Agendar Notificação</button>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log("Service Worker registrado", reg))
+                .catch(err => console.error("Erro ao registrar Service Worker", err));
+        }
+
+        document.getElementById("perm").addEventListener("click", () => {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    console.log("Permissão concedida!");
+                } else {
+                    console.log("Permissão negada.");
+                }
+            });
+        });
+
+        function agendarNotificacao(hora, minuto) {
+            const agora = new Date();
+            const horarioNotificacao = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), hora, minuto, 0);
+
+            if (horarioNotificacao - agora < 0) {
+                horarioNotificacao.setDate(horarioNotificacao.getDate() + 1);
+            }
+
+            setTimeout(() => {
+                enviarNotificacao();
+            }, horarioNotificacao - agora);
+        }
+
+        function enviarNotificacao() {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification("Notificação Web", {
+                    body: "Clique para acessar o site!",
+                    icon: "/icon.png",
+                    data: { url: "https://meusite.com" },
+                    actions: [{ action: "open", title: "Abrir site" }]
+                });
+            });
+        }
+
+        document.getElementById("agendar").addEventListener("click", () => {
+            const hora = document.getElementById("hora").value;
+            const minuto = document.getElementById("minuto").value;
+            agendarNotificacao(parseInt(hora), parseInt(minuto));
+        });
+    </script>
+</body>
+</html>
