@@ -3,62 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Olá, Mundo!</title>
+    <title>Agendar Notificação</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        button {
+            background-color: #f8a025;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Olá, Mundo!</h1>
-    <button id="perm">Ativar Notificações</button>
-    <br><br>
-    <input type="number" id="hora" min="0" max="23" placeholder="Hora (0-23)">
-    <input type="number" id="minuto" min="0" max="59" placeholder="Minuto (0-59)">
-    <button id="agendar">Agendar Notificação</button>
-    
+    <h1>Agendar Notificação</h1>
+    <p>Defina em quantos segundos deseja receber a notificação:</p>
+    <input type="number" id="tempo" min="1" placeholder="Tempo em segundos">
+    <button onclick="agendarNotificacao()">Agendar</button>
+
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log("Service Worker registrado", reg))
-                .catch(err => console.error("Erro ao registrar Service Worker", err));
-        }
-
-        document.getElementById("perm").addEventListener("click", () => {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    console.log("Permissão concedida!");
-                } else {
-                    console.log("Permissão negada.");
-                }
-            });
-        });
-
-        function agendarNotificacao(hora, minuto) {
-            const agora = new Date();
-            const horarioNotificacao = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), hora, minuto, 0);
-
-            if (horarioNotificacao - agora < 0) {
-                horarioNotificacao.setDate(horarioNotificacao.getDate() + 1);
+        function agendarNotificacao() {
+            let tempo = document.getElementById('tempo').value;
+            if (!tempo || tempo <= 0) {
+                alert('Por favor, insira um tempo válido.');
+                return;
+            }
+            
+            if (!('Notification' in window)) {
+                alert('Seu navegador não suporta notificações.');
+                return;
             }
 
-            setTimeout(() => {
-                enviarNotificacao();
-            }, horarioNotificacao - agora);
-        }
-
-        function enviarNotificacao() {
-            navigator.serviceWorker.ready.then(registration => {
-                registration.showNotification("Notificação Web", {
-                    body: "Clique para acessar o site!",
-                    icon: "/icon.png",
-                    data: { url: "https://meusite.com" },
-                    actions: [{ action: "open", title: "Abrir site" }]
-                });
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    setTimeout(() => {
+                        let notification = new Notification('Lembrete!', {
+                            body: 'Hoje de beber água!',
+                            icon: 'https://cdn-icons-png.flaticon.com/512/3076/3076649.png'
+                        });
+                        
+                        notification.onclick = () => {
+                            window.open('https://tomdrd.github.io/home/', '_blank');
+                        };
+                    }, tempo * 1000);
+                } else {
+                    alert('Você precisa permitir notificações para usar este recurso.');
+                }
             });
         }
-
-        document.getElementById("agendar").addEventListener("click", () => {
-            const hora = document.getElementById("hora").value;
-            const minuto = document.getElementById("minuto").value;
-            agendarNotificacao(parseInt(hora), parseInt(minuto));
-        });
     </script>
 </body>
 </html>
